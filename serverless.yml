@@ -1,0 +1,46 @@
+service:
+  name: user-service
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-dynamodb-local
+  - serverless-dotenv-plugin
+  - serverless-webpack
+  - serverless-offline
+    
+custom:
+  dotenv:
+    basePath: '.env/'
+  dynamodb:
+    start:
+      migrate: ${env:MIGRATE}
+      port: 8080
+      heapInitial: 200m
+      heapMax: 1g
+      convertEmptyValues: true
+  
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ${env:REGION}
+  stage: ${env:STAGE} 
+
+functions:
+  populateData:
+    handler: handler.initData
+    events:
+      - http:
+          method: post
+          path: populate-data
+          cors: true
+  filterUsers:
+    handler: handler.search
+    events:
+      - http:
+          method: get
+          path: users
+          cors: true
+
+resources:
+  # DynamoDB
+  - ${file(resources/dynamodb-table.yml)}
